@@ -1,0 +1,27 @@
+{
+  "namespace": "me.shubhamjain.model",
+  "name": "FlightRequestMetric",
+  "type": "record",
+  "fields": [
+    {
+      "name": "request_id",
+      "type": "string"
+    },
+    {
+      "name": "flight_id",
+      "type": "string"
+    },
+    {
+      "name": "status",
+      "type": "int"
+    },
+    {
+      "name": "created_at",
+      "type": [
+        "null",
+        "string"
+      ],
+      "default": null
+    }
+  ]
+}
