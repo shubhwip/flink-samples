@@ -1,0 +1,36 @@
+version: '3.9'
+services:
+  p1:
+    container_name: p1
+    ports:
+      - "5458:5432"
+    image: postgres:15.2
+    environment:
+      POSTGRES_PASSWORD: local
+      POSTGRES_USERNAME: local
+      POSTGRES_DB: demo
+    volumes:
+      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql
+  p2:
+    container_name: p2
+    ports:
+      - "5459:5432"
+    image: postgres:15.2
+    environment:
+      POSTGRES_PASSWORD: local
+      POSTGRES_USERNAME: local
+      POSTGRES_DB: demo
+    volumes:
+      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql
+
+  p3:
+    container_name: p3
+    ports:
+      - "5460:5432"
+    image: postgres:15.2
+    environment:
+      POSTGRES_PASSWORD: local
+      POSTGRES_USERNAME: local
+      POSTGRES_DB: demo
+    volumes:
+      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql

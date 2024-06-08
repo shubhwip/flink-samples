@@ -1,4 +1,4 @@
-package me.shubhamjain.pubsub;
+package me.shubhamjain.pubsub.hudi;
 
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.PubsubMessage;

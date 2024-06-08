@@ -14,9 +14,9 @@ import org.apache.flink.types.Row;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JdbcToHudiGCS {
+public class JdbcToIcebergGCS {
 
-    private static final Logger LOG = LoggerFactory.getLogger(JdbcToHudiGCS.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JdbcToIcebergGCS.class);
     private static final String GCP_PROJECT = System.getenv().getOrDefault("GCP_PROJECT", "");
     private static final String CHECKPOINTING_LOCATION = System.getenv()
             .getOrDefault("CHECKPOINTING_LOCATION", "");
@@ -79,34 +79,34 @@ public class JdbcToHudiGCS {
         DataStream<Tuple2<Boolean, Row>> resultStream = tableEnvironment.toRetractStream(resultTable, Row.class);
         resultStream.print();
 
-        // Define the sink table (Hudi on GCS)
-        String hudiTablePath = "gs://bucket-name/hudi/bookings";
-
-        tableEnvironment.executeSql(
-                "CREATE TABLE hudi_sink (" +
-                        "  book_ref STRING," +
-                        "  book_date TIMESTAMP(3)," +
-                        "  total_amount DECIMAL(20, 0)," +
-                        "  PRIMARY KEY (book_ref) NOT ENFORCED" +
-                        ") PARTITIONED BY (book_ref) WITH (" +
-                        "  'connector' = 'hudi'," +
-                        "  'path' = '" + hudiTablePath + "'," +
-                        "  'table.type' = 'COPY_ON_WRITE'," +
-                        "  'hoodie.datasource.write.recordkey.field' = 'book_ref'," +
-                        "  'hoodie.datasource.write.precombine.field' = 'book_date'," +
-                        "  'write.precombine.field' = 'book_date'," +
-                        "  'write.operation' = 'upsert'," +
-                        "  'compaction.async.enabled' = 'false'," +
-                        "  'hoodie.parquet.small.file.limit' = '104857600'" + // 100MB
-                        ")"
-        );
-        // Insert the data into the Hudi table
         tableEnvironment.executeSql("""
-        INSERT INTO hudi_sink select * from bookings_source;
+        CREATE CATALOG iceberg_catalog WITH (
+            'type'='iceberg',
+            'catalog-type'='hadoop',
+            'warehouse'='gs://bucket-name/iceberg/warehouse/'
+        );
         """);
 
-        // Execute the Flink job
-        env.execute("JDBC to Hudi Table");
+        tableEnvironment.executeSql("""
+        CREATE TABLE bookings_sink (
+            `book_ref`    STRING,
+            `book_date`     TIMESTAMP,
+            `total_amount`  DECIMAL(20, 0),
+            PRIMARY KEY (`book_ref`) NOT ENFORCED
+          ) WITH (
+            'connector'='iceberg',
+            'catalog-name'='iceberg_catalog',
+            'catalog-type'='hadoop',
+            'warehouse'='gs://bucket-name/iceberg/warehouse',
+            'format-version'='2'
+          );
+        """);
+
+        tableEnvironment.executeSql("""
+        INSERT INTO bookings_sink select * from bookings_source where total_amount > 60000;
+        """);
+        // Start the Flink job execution
+        env.execute("Flink Streaming JDBC to Table");
     }
 
 
