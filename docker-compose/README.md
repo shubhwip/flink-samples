@@ -22,7 +22,7 @@ CREATE database demo;
 
 Initiate a database
 ```
-psql -h host.docker.internal -p 5433 -U postgres demo < ~/shubhamjain/de/alloy-vs-postgresql/demo-small-en-20170815.sql
+psql -h host.docker.internal -p 5433 -U postgres demo < ./demo-small.sql
 ```
 
 Running flink program

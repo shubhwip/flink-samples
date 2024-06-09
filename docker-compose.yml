@@ -10,7 +10,7 @@ services:
       POSTGRES_USERNAME: local
       POSTGRES_DB: demo
     volumes:
-      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql
+      - ./demo-small.sql:/docker-entrypoint-initdb.d/demo.sql
   p2:
     container_name: p2
     ports:
@@ -21,7 +21,7 @@ services:
       POSTGRES_USERNAME: local
       POSTGRES_DB: demo
     volumes:
-      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql
+      - ./demo-small.sql:/docker-entrypoint-initdb.d/demo.sql
 
   p3:
     container_name: p3
@@ -33,4 +33,4 @@ services:
       POSTGRES_USERNAME: local
       POSTGRES_DB: demo
     volumes:
-      - ./demo-small-en-20170815.sql:/docker-entrypoint-initdb.d/demo.sql
+      - ./demo-small.sql:/docker-entrypoint-initdb.d/demo.sql

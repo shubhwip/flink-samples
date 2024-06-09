@@ -92,8 +92,9 @@ public class JdbcToIcebergLocalWarehouse {
             `book_ref`    STRING,
             `book_date`     TIMESTAMP,
             `total_amount`  DECIMAL(20, 0),
-            PRIMARY KEY (`book_ref`) ENFORCED
-          ) WITH (
+            PRIMARY KEY (`book_ref`) NOT ENFORCED
+          ) PARTITIONED BY (book_date)
+          WITH (
             'connector'='iceberg',
             'catalog-name'='iceberg_catalog',
             'catalog-type'='hadoop',

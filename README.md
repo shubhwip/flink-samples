@@ -5,7 +5,14 @@
 https://nightlies.apache.org/flink/flink-docs-master/docs/deployment/java_compatibility/
 
 ## Hudi Dependency Conflict with Iceberg
-### remove hudi dependency as there is no version for 1.18
+### Remove hudi dependency as there is no version for 1.18
+
+- Error is
+```shell
+(8ff4c69f39ffc07bf436683211aa16f1_9dd63673dd41ea021b896d5203f3ba7c_1_0) switched from INITIALIZING to FAILED with failure cause:
+java.lang.NoSuchMethodError: 'void org.apache.flink.dropwizard.metrics.DropwizardHistogramWrapper.<init>(com.codahale.metrics.Histogram)'
+```
+- Remove hudi dependency
 ```shell
         <dependency>
             <groupId>org.apache.hudi</groupId>
@@ -13,3 +20,7 @@ https://nightlies.apache.org/flink/flink-docs-master/docs/deployment/java_compat
             <version>${hudi.version}</version>
         </dependency>
 ```
+
+
+## Resources
+- Flink Examples - https://github.com/apache/flink/tree/master/flink-examples
