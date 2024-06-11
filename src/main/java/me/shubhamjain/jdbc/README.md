@@ -203,3 +203,10 @@ java.lang.OutOfMemoryError: Java heap space
 	at java.base@17.0.7/java.util.TimerThread.mainLoop(Timer.java:563)
 	at java.base@17.0.7/java.util.TimerThread.run(Timer.java:516)
 ```
+
+## Hudi Issues
+```shell
+Caused by: java.lang.RuntimeException: java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.lang.Object[] java.util.Arrays$ArrayList.a accessible: module java.base does not "opens java.util" to unnamed module @663bb8ef
+java.lang.RuntimeException: java.lang.reflect.InaccessibleObjectException: Unable to make field private final java.lang.Object[] java.util.Arrays$ArrayList.a accessible: module java.base does not "opens java.util" to unnamed module @663bb8ef
+```
+### Hudi is supported with Java11 only.

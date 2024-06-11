@@ -58,20 +58,19 @@ public class JdbcToIcebergGCS {
         String dbUser = "postgres";
 
         //Define Input Format Builder
-        tableEnvironment.executeSql("""
-        CREATE TABLE bookings_source (
-            `book_ref` STRING,
-            `book_date` TIMESTAMP,
-            `total_amount` DECIMAL(20, 0),
-            PRIMARY KEY (`book_ref`) NOT ENFORCED
-          ) WITH (
-            'connector' = 'jdbc',
-            'url' = 'jdbc:postgresql://host.docker.internal:5433/demo',
-            'username' = 'postgres',
-            'password' = 'postgres',
-            'table-name' = 'bookings'
-          ); 
-        """);
+        tableEnvironment.executeSql("        " +
+                "   CREATE TABLE bookings_source (\n" +
+                "            `book_ref` STRING,\n" +
+                "            `book_date` TIMESTAMP,\n" +
+                "            `total_amount` DECIMAL(20, 0),\n" +
+                "            PRIMARY KEY (`book_ref`) NOT ENFORCED\n" +
+                "          ) WITH (\n" +
+                "            'connector' = 'jdbc',\n" +
+                "            'url' = 'jdbc:postgresql://host.docker.internal:5433/demo',\n" +
+                "            'username' = 'postgres',\n" +
+                "            'password' = 'postgres',\n" +
+                "            'table-name' = 'bookings'\n" +
+                "          );");
         // Get Data from SQL Table
         Table resultTable = tableEnvironment.sqlQuery("SELECT * FROM bookings_source");
 
@@ -79,32 +78,27 @@ public class JdbcToIcebergGCS {
         DataStream<Tuple2<Boolean, Row>> resultStream = tableEnvironment.toRetractStream(resultTable, Row.class);
         resultStream.print();
 
-        tableEnvironment.executeSql("""
-        CREATE CATALOG iceberg_catalog WITH (
-            'type'='iceberg',
-            'catalog-type'='hadoop',
-            'warehouse'='gs://bucket-name/iceberg/warehouse/'
-        );
-        """);
+        tableEnvironment.executeSql("CREATE CATALOG iceberg_catalog WITH (\n" +
+                "            'type'='iceberg',\n" +
+                "            'catalog-type'='hadoop',\n" +
+                "            'warehouse'='gs://bucket-name/iceberg/warehouse/'\n" +
+                "        );");
 
-        tableEnvironment.executeSql("""
-        CREATE TABLE bookings_sink (
-            `book_ref`    STRING,
-            `book_date`     TIMESTAMP,
-            `total_amount`  DECIMAL(20, 0),
-            PRIMARY KEY (`book_ref`) NOT ENFORCED
-          ) WITH (
-            'connector'='iceberg',
-            'catalog-name'='iceberg_catalog',
-            'catalog-type'='hadoop',
-            'warehouse'='gs://bucket-name/iceberg/warehouse',
-            'format-version'='2'
-          );
-        """);
+        tableEnvironment.executeSql("        CREATE TABLE bookings_sink (\n" +
+                "            `book_ref`    STRING,\n" +
+                "            `book_date`     TIMESTAMP,\n" +
+                "            `total_amount`  DECIMAL(20, 0),\n" +
+                "            PRIMARY KEY (`book_ref`) NOT ENFORCED\n" +
+                "          ) WITH (\n" +
+                "            'connector'='iceberg',\n" +
+                "            'catalog-name'='iceberg_catalog',\n" +
+                "            'catalog-type'='hadoop',\n" +
+                "            'warehouse'='gs://bucket-name/iceberg/warehouse',\n" +
+                "            'format-version'='2'\n" +
+                "          );");
 
-        tableEnvironment.executeSql("""
-        INSERT INTO bookings_sink select * from bookings_source where total_amount > 60000;
-        """);
+        tableEnvironment.executeSql("INSERT INTO bookings_sink select * from bookings_source where total_amount > 60000;");
+
         // Start the Flink job execution
         env.execute("Flink Streaming JDBC to Table");
     }

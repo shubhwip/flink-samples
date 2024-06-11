@@ -12,7 +12,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <flink.version>1.18.1</flink.version>
-        <target.java.version>17</target.java.version>
+        <target.java.version>11</target.java.version>
         <flink.binary.version>1.17</flink.binary.version>
         <scala.binary.version>2.12</scala.binary.version>
         <hudi.version>0.14.0</hudi.version>
@@ -176,6 +176,13 @@
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-table-api-java</artifactId>
             <version>${flink.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common -->
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>3.4.0</version>
         </dependency>
 
         <dependency>

@@ -4,6 +4,7 @@ import org.apache.flink.api.common.typeinfo.BasicTypeInfo;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.typeutils.RowTypeInfo;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.LocalStreamEnvironment;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
@@ -24,7 +25,7 @@ public class JdbcToHudiGCS {
             System.getenv().getOrDefault("CHECKPOINTING_INTERVAL", "10000"));
     private static final String RESULT_LOCATION = System.getenv().getOrDefault("RESULT_LOCATION", "");
     private static final boolean LOCAL_EXECUTION = Boolean.parseBoolean(
-            System.getenv().getOrDefault("LOCAL_EXECUTION", "true"));
+            System.getenv().getOrDefault("LOCAL_EXECUTION", "false"));
 
     public static void main(String[] args) throws Exception {
         runFlinkJob(GCP_PROJECT, LOCAL_EXECUTION, CHECKPOINTING_LOCATION,
@@ -42,7 +43,7 @@ public class JdbcToHudiGCS {
         if (local) {
             env = LocalStreamEnvironment.createLocalEnvironment();
         } else {
-            env = StreamExecutionEnvironment.getExecutionEnvironment();
+            env = StreamExecutionEnvironment.getExecutionEnvironment(new Configuration());
         }
 
         StreamTableEnvironment tableEnvironment = StreamTableEnvironment.create(
@@ -58,29 +59,32 @@ public class JdbcToHudiGCS {
         String dbUser = "postgres";
 
         //Define Input Format Builder
-        tableEnvironment.executeSql("""
-        CREATE TABLE bookings_source (
-            `book_ref` STRING,
-            `book_date` TIMESTAMP,
-            `total_amount` DECIMAL(20, 0),
-            PRIMARY KEY (`book_ref`) NOT ENFORCED
-          ) WITH (
-            'connector' = 'jdbc',
-            'url' = 'jdbc:postgresql://host.docker.internal:5433/demo',
-            'username' = 'postgres',
-            'password' = 'postgres',
-            'table-name' = 'bookings'
-          ); 
-        """);
+        tableEnvironment.executeSql("        CREATE TABLE bookings_source (\n" +
+                "            `book_ref` STRING,\n" +
+                "            `book_date` TIMESTAMP,\n" +
+                "            `total_amount` DECIMAL(20, 0),\n" +
+                "            PRIMARY KEY (`book_ref`) NOT ENFORCED\n" +
+                "          ) WITH (\n" +
+                "            'connector' = 'jdbc',\n" +
+                "            'url' = 'jdbc:postgresql://host.docker.internal:5433/demo',\n" +
+                "            'username' = 'postgres',\n" +
+                "            'password' = 'postgres',\n" +
+                "            'table-name' = 'bookings'\n" +
+                "          ); ");
+
+        String checkpoints = "file:///tmp/bucket-name/hudi/checkpoints";
+
+        env.getCheckpointConfig().setCheckpointStorage(checkpoints);
+
         // Get Data from SQL Table
         Table resultTable = tableEnvironment.sqlQuery("SELECT * FROM bookings_source");
 
         // Convert the result table to a DataStream and print it
-        DataStream<Tuple2<Boolean, Row>> resultStream = tableEnvironment.toRetractStream(resultTable, Row.class);
-        resultStream.print();
+        // DataStream<Tuple2<Boolean, Row>> resultStream = tableEnvironment.toRetractStream(resultTable, Row.class);
+        // resultStream.print();
 
         // Define the sink table (Hudi on GCS)
-        String hudiTablePath = "gs://bucket-name/hudi/bookings";
+        String hudiTablePath = "file:///tmp/bucket-name/hudi/bookings";
 
         tableEnvironment.executeSql(
                 "CREATE TABLE hudi_sink (" +
@@ -101,9 +105,9 @@ public class JdbcToHudiGCS {
                         ")"
         );
         // Insert the data into the Hudi table
-        tableEnvironment.executeSql("""
-        INSERT INTO hudi_sink select * from bookings_source;
-        """);
+        tableEnvironment.executeSql("INSERT INTO hudi_sink select * from bookings_source; ");
+
+        System.out.println("JVM Options: " + java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
 
         // Execute the Flink job
         env.execute("JDBC to Hudi Table");

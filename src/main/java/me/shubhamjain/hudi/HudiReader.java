@@ -11,7 +11,8 @@ public class HudiReader {
         StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env);
 
         // Define the Hudi table (assuming it's already created and populated)
-        String hudiTablePath = "gs://bucket-name/hudi/bookings";
+        String hudiTablePath = "file:///tmp/bucket-name/hudi/bookings/";
+
         tableEnv.executeSql(
                 "CREATE TABLE hudi_table (" +
                         "  book_ref STRING," +
@@ -21,7 +22,13 @@ public class HudiReader {
                         ") PARTITIONED BY (book_ref) WITH (" +
                         "  'connector' = 'hudi'," +
                         "  'path' = '" + hudiTablePath + "'," +
-                        "  'table.type' = 'COPY_ON_WRITE'" +
+                        "  'table.type' = 'COPY_ON_WRITE'," +
+                        "  'hoodie.datasource.write.recordkey.field' = 'book_ref'," +
+                        "  'hoodie.datasource.write.precombine.field' = 'book_date'," +
+                        "  'write.precombine.field' = 'book_date'," +
+                        "  'write.operation' = 'upsert'," +
+                        "  'compaction.async.enabled' = 'false'," +
+                        "  'hoodie.parquet.small.file.limit' = '104857600'" + // 100MB
                         ")"
         );
 
